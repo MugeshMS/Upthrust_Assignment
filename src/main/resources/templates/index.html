@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mini Workflow Automation</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Mini Workflow Automation ✨</h1>
+
+        <!-- Form -->
+        <form id="workflowForm">
+            <input type="text" id="prompt" name="prompt" placeholder="Enter your prompt here..." required>
+            <select id="action" name="action" required>
+                <option value="" disabled selected>choose an API</option>
+                <option value="weather">🌤 Weather</option>
+                <option value="github">💻 GitHub</option>
+                <option value="news">📰 News</option>
+                <option value ="all">⚡All</option>
+            </select>
+            <button type="submit">🚀 Submit</button>
+        </form>
+
+        <!-- Display Final Result -->
+        <div id="resultBox" class="result-box" style="display:none;"></div>
+    </div>
+
+<script>
+document.getElementById("workflowForm").addEventListener("submit", async function(e) {
+   	 e.preventDefault();
+
+    const prompt = document.getElementById("prompt").value;
+    const action = document.getElementById("action").value;
+
+    const response = await fetch("/run-workflow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, action })
+    });
+
+    const data = await response.json();
+
+    // Show result box
+    const resultBox = document.getElementById("resultBox");
+    resultBox.style.display = "block";
+
+    if (action === "all") {
+    let combinedResult = "";
+
+   
+  
+
+combinedResult += `<div><strong>🌤 Weather:</strong> ${data.weather_reply || "N/A"}</div>`;
+combinedResult += `<div><strong>📰 News:</strong> ${data.news_reply || "N/A"}</div>`;
+combinedResult += `<div><strong>💻 GitHub:</strong> ${data.git_reply || "N/A"}</div>`;
+
+
+resultBox.innerHTML = combinedResult;
+
+} else {
+    resultBox.textContent = data.final_result;
+}
+
+});
+
+</script>
+</body>
+</html>
