@@ -3,20 +3,21 @@ FROM eclipse-temurin:17-jdk-focal AS builder
 
 WORKDIR /app
 
-# Copy Maven wrapper
+# Copy Maven wrapper and configuration
 COPY mvnw .
 COPY .mvn .mvn
-
-# Copy pom.xml first (for dependency caching)
 COPY pom.xml .
 
-# Download dependencies (so Docker can cache this layer)
+# Make Maven wrapper executable (this fixes your error)
+RUN chmod +x mvnw
+
+# Download dependencies (cached if pom.xml hasn’t changed)
 RUN ./mvnw dependency:go-offline -B
 
 # Copy source code
 COPY src src
 
-# Package the application (skip tests to speed up build)
+# Build the application (skip tests for faster build)
 RUN ./mvnw package -DskipTests
 
 # Stage 2: Create the final lightweight runtime image
@@ -27,8 +28,8 @@ WORKDIR /app
 # Copy the built JAR into the runtime image
 COPY --from=builder /app/target/*.jar app.jar
 
-# Expose the port (adjust if your app uses another port)
+# Expose the app port (Render sets PORT env var dynamically)
 EXPOSE 9090
 
-# Run the Spring Boot application
+# Run Spring Boot app (Render overrides PORT automatically)
 ENTRYPOINT ["java", "-jar", "app.jar"]
